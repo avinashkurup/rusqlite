@@ -14,6 +14,7 @@ use std::default::Default;
 use std::mem;
 
 mod error;
+mod ffi;
 
 #[must_use]
 pub fn SQLITE_STATIC() -> sqlite3_destructor_type {
@@ -40,5 +41,11 @@ impl Default for sqlite3_vtab {
 impl Default for sqlite3_vtab_cursor {
     fn default() -> Self {
         unsafe { mem::zeroed() }
+    }
+}
+
+pub fn initialize_sqlite_html_extension() {
+    unsafe {
+        ffi::sqlite3_html_init(); // Call the function from the ffi module
     }
 }

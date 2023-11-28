@@ -33,6 +33,7 @@ session = ["preupdate_hook", "buildtime_bindgen"]
 in_gecko = []
 with-asan = []
 wasm32-wasi-vfs = []
+sqlite_custom_extension = []
 
 # lowest version shipped with Windows 10.0.10586 was 3.8.8.3
 #
@@ -42,10 +43,12 @@ wasm32-wasi-vfs = []
 winsqlite3 = []
 
 [dependencies]
+bindgen = { version = "0.69", optional = true, default-features = false, features = ["runtime"] }
 openssl-sys = { version = "0.9", optional = true }
 
 [build-dependencies]
 bindgen = { version = "0.69", optional = true, default-features = false, features = ["runtime"] }
+# bindgen = { version = "0.69", default-features = false, features = ["runtime"] }
 pkg-config = { version = "0.3.19", optional = true }
 cc = { version = "1.0", optional = true }
 vcpkg = { version = "0.2", optional = true }

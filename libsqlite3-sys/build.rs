@@ -1,5 +1,8 @@
+#[cfg(feature = "buildtime_bindgen")]
+use bindgen;
 use std::env;
 use std::path::Path;
+// use std::path::PathBuf;
 
 /// Tells whether we're building for Windows. This is more suitable than a plain
 /// `cfg!(windows)`, since the latter does not properly handle cross-compilation
@@ -39,6 +42,35 @@ fn copy_bindings<T: AsRef<Path>>(dir: &str, bindgen_name: &str, out_path: T) {
 fn main() {
     let out_dir = env::var("OUT_DIR").unwrap();
     let out_path = Path::new(&out_dir).join("bindgen.rs");
+
+    // #[cfg(feature = "buildtime_bindgen")]
+    // if cfg!(feature = "sqlite_custom_extension") {
+    //     // Logic to handle the custom extension
+    //     println!("cargo:rustc-link-search=native=/home/avinash/Projects/resource-surveillance/src/my-fork/resource-surveillance/udi-sqlite/sqlite-html/dist");
+    //     // println!("cargo:rustc-link-search=native=../../udi-sqlite/sqlite-html/dist");
+    //     println!("cargo:rustc-link-lib=static=html0"); // Assuming the name of your static library is `html0`
+    //     // println!("cargo:rustc-link-search=native=../../udi-sqlite/sqlite-html/dist");
+    //     // You can add more configurations or steps here as needed
+
+    //     let bindings = bindgen::Builder::default()
+    //     // The input header we would like to generate
+    //     // bindings for.
+    //     .header("./extension.h")
+    //     // Tell cargo to invalidate the built crate whenever any of the
+    //     // included header files changed.
+    //     .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
+    //     // Finish the builder and generate the bindings.
+    //     .generate()
+    //     // Unwrap the Result and panic on failure.
+    //     .expect("Unable to generate bindings");
+
+    //     // Write the bindings to the $OUT_DIR/bindings.rs file.
+    //     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+    //     bindings
+    //         .write_to_file(out_path.join("bindings_sqlite_html.rs"))
+    //         .expect("Couldn't write bindings!");
+    // }
+
     if cfg!(feature = "in_gecko") {
         // When inside mozilla-central, we are included into the build with
         // sqlite3.o directly, so we don't want to provide any linker arguments.
@@ -100,6 +132,18 @@ mod build_bundled {
     pub fn main(out_dir: &str, out_path: &Path) {
         let lib_name = super::lib_name();
 
+        if cfg!(target_os = "linux") {
+            println!("cargo:warning=Linking with html0 library on Linux platform");
+            println!("cargo:rustc-link-search=native=/home/avinash/Projects/resource-surveillance/src/my-fork/resource-surveillance/udi-sqlite/sqlite-html/dist");
+            println!("cargo:rustc-link-lib=static=html0");
+            // println!("cargo:rerun-if-changed=udi-sqlite-extensions.c");
+            // println!("cargo:warning=udi-sqlite-extensions.c is being monitored for changes");
+        } else {
+            println!(
+                "cargo:warning=Building on a non-Linux platform, skipping html0 library linking"
+            );
+        }
+
         // This is just a sanity check, the top level `main` should ensure this.
         assert!(!(cfg!(feature = "bundled-windows") && !cfg!(feature = "bundled") && !win_target()),
             "This module should not be used: we're not on Windows and the bundled feature has not been enabled");
@@ -137,8 +181,13 @@ mod build_bundled {
             .flag("-DSQLITE_USE_URI")
             .flag("-DHAVE_USLEEP=1")
             .flag("-D_POSIX_THREAD_SAFE_FUNCTIONS") // cross compile with MinGW
+            // .flag("-DSQLITE_SHELL_INIT_PROC=udi_sqlite_init_extensions")
             .warnings(false);
 
+        // if cfg!(target_os = "linux") {
+        //     println!("cargo:warning=udi-sqlite-extensions.c is compiled");
+        //     cfg.file("./sqlite3/udi-sqlite-extensions.c");
+        // }
         if cfg!(feature = "bundled-sqlcipher") {
             cfg.flag("-DSQLITE_HAS_CODEC").flag("-DSQLITE_TEMP_STORE=2");
 
